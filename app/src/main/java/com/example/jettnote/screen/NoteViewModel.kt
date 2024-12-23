@@ -48,5 +48,10 @@ class NoteViewModel @Inject constructor(private val repository: NoteRepository):
              remove(note)
          } // Create a new list instance
      }
+    fun removeAllNote()=viewModelScope.launch {
+        repository.deleteAllNote()
+        _noteList.value = emptyList()
+
+    }
 
 }
