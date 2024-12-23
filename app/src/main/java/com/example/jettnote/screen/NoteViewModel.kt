@@ -42,6 +42,11 @@ class NoteViewModel @Inject constructor(private val repository: NoteRepository):
     }
      fun addNote(note: Note)= viewModelScope.launch { repository.addNote(note) }
      fun updateNote(note: Note)= viewModelScope.launch { repository.updateNote(note) }
-     fun removeNote(note: Note)=viewModelScope.launch { repository.deleteNote(note) }
+     fun removeNote(note: Note)=viewModelScope.launch {
+         repository.deleteNote(note)
+         _noteList.value = _noteList.value.toMutableList().apply {
+             remove(note)
+         } // Create a new list instance
+     }
 
 }
