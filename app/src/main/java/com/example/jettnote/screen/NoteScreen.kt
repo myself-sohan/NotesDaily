@@ -3,8 +3,11 @@ package com.example.jettnote.screen
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,10 +17,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -25,24 +31,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jettnote.R
 import com.example.jettnote.components.NoteButton
 import com.example.jettnote.components.NoteInputText
 import com.example.jettnote.components.NoteRow
-import com.example.jettnote.data.NotesDataSource
 import com.example.jettnote.model.Note
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreen(modifier: Modifier,
-               notes: List<Note> ,
+               noteViewModel: NoteViewModel,
                onAddNote: (Note) -> Unit,
                onRemoveNote: (Note) -> Unit
                )
 {
+    val notes = noteViewModel.noteList.collectAsState().value
     val title = remember { mutableStateOf("") }
     val description =  remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -78,7 +84,7 @@ fun NoteScreen(modifier: Modifier,
                 label = "Title",
                 onTextChange = {
                     if (it.all { char ->
-                            char.isLetter() || char.isWhitespace()
+                            char.isLetter() || char.isWhitespace() || char.isDigit()
                         })
                         title.value = it
                 },
@@ -93,7 +99,7 @@ fun NoteScreen(modifier: Modifier,
                 label = "Add a Note",
                 onTextChange = {
                     if (it.all { char ->
-                            char.isLetter() || char.isWhitespace()
+                            char.isLetter() || char.isWhitespace() || char.isDigit()
                         })
                         description.value = it
                 },
@@ -119,16 +125,43 @@ fun NoteScreen(modifier: Modifier,
                 .height(2.dp)
                 .background(Color.DarkGray),
         )
-        LazyColumn {
-            items(notes) {
-                NoteRow(
-                    note = it,
-                    onNoteClicked = {
-                        onRemoveNote(it)
-                    }
+        if(notes.isEmpty())
+        {
+            Surface(modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(10.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 )
+                {
+                    Text(
+                        text = "No Notes available",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             }
         }
+        else
+        {
+            LazyColumn {
+                    items(notes) {
+                        NoteRow(
+                            note = it,
+                            onNoteClicked = {
+                                onRemoveNote(it)
+                            }
+                        )
+                    }
+                }
+
+        }
+
+
     }
 }
 

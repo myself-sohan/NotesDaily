@@ -46,9 +46,8 @@ fun NotesApp(noteViewModel: NoteViewModel,
 
              modifier: Modifier)
 {
-    var notesList = noteViewModel.noteList.collectAsState().value
     NoteScreen(modifier = modifier,
-        notes = notesList,
+        noteViewModel=noteViewModel,
         onAddNote = {
             noteViewModel.addNote(it)
         },
