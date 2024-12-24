@@ -3,15 +3,9 @@ package com.example.jettnote.screen
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,14 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,18 +28,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jettnote.R
+import com.example.jettnote.components.AlertMessage
 import com.example.jettnote.components.NoteButton
 import com.example.jettnote.components.NoteInputText
 import com.example.jettnote.components.NoteRow
@@ -68,7 +53,7 @@ fun NoteScreen(modifier: Modifier,
     val title = remember { mutableStateOf("") }
     val description =  remember { mutableStateOf("") }
     val context = LocalContext.current
-    var showDialog= remember { mutableStateOf(false) }
+    var showDialogForDeleteAll= remember { mutableStateOf(false) }
     Column(modifier = modifier)
     {
         TopAppBar(
@@ -164,18 +149,10 @@ fun NoteScreen(modifier: Modifier,
         } else {
             Column(horizontalAlignment = Alignment.CenterHorizontally)
             {
-//                NoteButton(
-//                    text = "Press for 2 sec to Delete All",
-//                    onClick = {
-//                        noteViewModel.removeAllNote()
-//                        Toast.makeText(context, "All Notes Deleted", Toast.LENGTH_SHORT).show()
-//                    },
-//                    colors = ButtonDefaults.buttonColors(containerColor = Color(232, 69, 61))
-//                )
                 NoteButton(
                     text = "Delete All",
                     onClick = {
-                        showDialog.value = true
+                        showDialogForDeleteAll.value = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(232, 69, 61))
                 )
@@ -185,7 +162,7 @@ fun NoteScreen(modifier: Modifier,
                             note = it,
                             onNoteClicked = {
                                 onRemoveNote(it)
-                            }
+                            },
                         )
                     }
                 }
@@ -193,64 +170,23 @@ fun NoteScreen(modifier: Modifier,
 
         }
 
-        if (showDialog.value) {
-            BasicAlertDialog(
-                onDismissRequest = { showDialog.value = false },
-                )
-            {
-                Card(modifier=Modifier
-                    .fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(Color(62, 118, 213, 255)),
-                    elevation = CardDefaults.cardElevation(10.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(top = 10.dp),)
-                    {
-                        Row(modifier= Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Are you sure you want to permanently delete all notes?",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                textAlign = TextAlign.Center,
-                                color = Color.White )
-                        }
-                        Row(
-                            modifier = modifier
-                                .padding(20.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            NoteButton(
-                                modifier = Modifier.weight(1f),
-                                text = "Yes",
-                                onClick = {
-                                    noteViewModel.removeAllNote()
-                                    Toast.makeText(context, "All Notes Deleted", Toast.LENGTH_SHORT)
-                                        .show()
-                                    showDialog.value = false
-                                },
-                            )
-                            Spacer(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(2f)
-                            )
-                            NoteButton(
-                                modifier = Modifier.weight(1f),
-                                text = "No",
-                                onClick = {
-                                    showDialog.value = false
-                                },
-                            )
-                        }
-
-
-                    }
-                }
-            }
+        if (showDialogForDeleteAll.value) {
+            AlertMessage(
+                labelText = "Are you sure you want to delete all notes?",
+                leftButtonText = "YES",
+                rightButtonText = "NO",
+                onLeftButtonClick = {
+                    noteViewModel.removeAllNote()
+                    Toast.makeText(context, "All Notes Deleted", Toast.LENGTH_SHORT)
+                        .show()
+                    showDialogForDeleteAll.value = false
+                },
+                onRightButtonClick = {
+                    showDialogForDeleteAll.value=false
+                },
+                showDialog = showDialogForDeleteAll,
+                modifier = modifier
+            )
         }
     }
 }
