@@ -50,23 +50,27 @@ fun NoteScreen(modifier: Modifier,
                )
 {
     val notes = noteViewModel.noteList.collectAsState().value
-    val title = remember { mutableStateOf("") }
-    val description =  remember { mutableStateOf("") }
+    var title = remember { mutableStateOf("") }
+    var description =  remember { mutableStateOf("") }
     val context = LocalContext.current
     var showDialogForDeleteAll= remember { mutableStateOf(false) }
+    var showDialogForTap= remember { mutableStateOf(false) }
+    var currentNote= remember { mutableStateOf(Note(title="", description = "")) }
+    val isUpdating = remember { mutableStateOf(false) }
     Column(modifier = modifier)
     {
         TopAppBar(
             title = {
-                Text(text = stringResource(id = R.string.app_name))
+                Text(text = stringResource(id = R.string.app_name),
+                    color = MaterialTheme.colorScheme.onPrimary)
             },
             actions = {
                 Image(
                     imageVector = Icons.Default.Notifications,
-                    contentDescription = "Icon"
+                    contentDescription = "Icon",
                 )
             },
-            colors = TopAppBarDefaults.topAppBarColors(Color.LightGray)
+            colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.onSecondaryContainer)
         )
         //Content
         Column(
@@ -106,18 +110,39 @@ fun NoteScreen(modifier: Modifier,
                 },
                 imeAction = ImeAction.Done
             )
-            NoteButton(
-                text = "Save",
-                onClick = {
-                    if (title.value.isNotEmpty() && description.value.isNotEmpty()) {
-                        onAddNote(Note(title = title.value, description = description.value))
-                        title.value = ""
-                        description.value = ""
-                        Toast.makeText(context, "Note Added", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(134, 222, 92, 255))
-            )
+            if(!isUpdating.value) {
+
+                NoteButton(
+                    text = "Save",
+                    onClick = {
+                        if (title.value.isNotEmpty() && description.value.isNotEmpty()) {
+                            onAddNote(Note(title = title.value, description = description.value))
+                            title.value = ""
+                            description.value = ""
+                            Toast.makeText(context, "Note Added", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(134, 222, 92, 255))
+                )
+            }
+            else
+            {
+                NoteButton(
+                    text = "Update",
+                    onClick = {
+                        isUpdating.value=false
+                        if (title.value.isNotEmpty() && description.value.isNotEmpty()) {
+                            currentNote.value.title=title.value
+                            currentNote.value.description=description.value
+                            noteViewModel.updateNote(currentNote.value)
+                            title.value = ""
+                            description.value = ""
+                            Toast.makeText(context, "Note Updated", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(62, 118, 213, 255))
+                )
+            }
         }
         Box(
             modifier = Modifier
@@ -161,7 +186,9 @@ fun NoteScreen(modifier: Modifier,
                         NoteRow(
                             note = it,
                             onNoteClicked = {
-                                onRemoveNote(it)
+                                showDialogForTap.value=true
+                                currentNote.value=it
+
                             },
                         )
                     }
@@ -170,7 +197,8 @@ fun NoteScreen(modifier: Modifier,
 
         }
 
-        if (showDialogForDeleteAll.value) {
+        if (showDialogForDeleteAll.value)
+        {
             AlertMessage(
                 labelText = "Are you sure you want to delete all notes?",
                 leftButtonText = "YES",
@@ -185,6 +213,27 @@ fun NoteScreen(modifier: Modifier,
                     showDialogForDeleteAll.value=false
                 },
                 showDialog = showDialogForDeleteAll,
+                modifier = modifier
+            )
+        }
+        if (showDialogForTap.value)
+        {
+            AlertMessage(
+                labelText = "Choose an option",
+                leftButtonText = "UPDATE",
+                rightButtonText = "DELETE",
+                onLeftButtonClick = {
+                    showDialogForTap.value = false
+                    isUpdating.value = true
+                    title.value=currentNote.value.title
+                    description.value=currentNote.value.description
+                },
+                onRightButtonClick = {
+                    showDialogForTap.value=false
+                    onRemoveNote(currentNote.value)
+                    Toast.makeText(context, "Note Deleted", Toast.LENGTH_SHORT).show()
+                },
+                showDialog = showDialogForTap,
                 modifier = modifier
             )
         }
